@@ -25,13 +25,14 @@ public class Server extends Thread {
 		clients = new ArrayList<SocketServer>();
 		
 		// Init database-connection
-		/* {
+		try {
 			db = new DatabaseHandler();
 			didConnect = true;
 		} catch (Exception e) {
 			didConnect = false;
 			System.out.println("Hallo");
-		}*/
+			e.printStackTrace();
+		}
 		
 		// Init serverSocket
 		serverSocket = new ServerSocket(9000);
