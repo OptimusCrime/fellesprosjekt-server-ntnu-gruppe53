@@ -164,7 +164,7 @@ public class SocketServer extends Thread {
 					tempJSONObj.put("participate", res.getBoolean("participate"));
 					tempJSONObj.put("hide", res.getBoolean("hide"));
 					tempJSONObj.put("alarm", res.getBoolean("alarm"));
-					tempJSONObj.put("alarmTime", res.getString("alarmTime"));
+					tempJSONObj.put("alarm_time", res.getString("alarmTime"));
 					
 					// Add to array
 					appointments.add(tempJSONObj);
