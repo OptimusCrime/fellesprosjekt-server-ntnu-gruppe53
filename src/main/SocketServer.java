@@ -111,10 +111,18 @@ public class SocketServer extends Thread {
 			JSONArray appointments = new JSONArray();
 			JSONObject derp1 = new JSONObject();
 			derp1.put("id", 1);
-			derp1.put("avtale_start", 10000);
-			derp1.put("avtale_slutt", 10000);
-			derp1.put("tittel", "Fuck off");
-			derp1.put("beskrivelse", "Todo 123");
+			derp1.put("title", "Fuck off");
+			derp1.put("description", "Todo 123");
+			derp1.put("start", 100000);
+			derp1.put("end", 100000);
+			derp1.put("place", "Todo 123");
+			derp1.put("room", null);
+			
+			derp1.put("participates", true);
+			derp1.put("hide", false);
+			derp1.put("alarm", false);
+			derp1.put("alarm_time", 0);
+
 			appointments.add(derp1);
 			responseObj.put("data", appointments);
 		}
