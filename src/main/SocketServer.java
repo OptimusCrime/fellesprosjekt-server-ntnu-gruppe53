@@ -31,11 +31,12 @@ public class SocketServer extends Thread {
 	 * Constructor
 	 */
 	
-	public SocketServer(Server serv, Socket s) {
+	public SocketServer(Server serv, Socket s, DatabaseHandler d) {
 		System.out.println("Called!!!");
 		// Set initial data for user
-		server = serv;
-		socket = s;
+		this.server = serv;
+		this.socket = s;
+		this.db = d;
 	}
 	
 	/*
@@ -91,17 +92,41 @@ public class SocketServer extends Thread {
 		// Decode json
 		JSONObject requestObj = (JSONObject)JSONValue.parse(msg);
 		
+		// Get action and type
 		String action = (String) requestObj.get("action");
 		String type = (String) requestObj.get("type");
 		
+		// Get login
+		JSONObject loginObj = (JSONObject) requestObj.get("login");
+		String username = (String) loginObj.get("username");
+		String password = (String) loginObj.get("password");
+		
+		// Create response-object
 		JSONObject responseObj = new JSONObject();
 		responseObj.put("method", "response");
 		responseObj.put("action", action);
 		responseObj.put("type", type);
 		
+		// Check what action we're dealing with
 		if (action.equals("login")) {
+			// Login
 			if (type.equals("put")) {
-				responseObj.put("code", 200);
+				// Set login to false first
+				boolean isCorrectLogin = false;
+				
+				// Try to run the query
+				try {
+					isCorrectLogin = db.selectUser(username, password);
+				}
+				catch (Exception e) {}
+				
+				// Check if it was successful or not
+				if (isCorrectLogin) {
+					responseObj.put("code", 200);
+				}
+				else {
+					responseObj.put("code", 500);
+				}
 			}
 		}
 		else if (action.equals("logout")) {

@@ -22,20 +22,19 @@ public class Server extends Thread {
 	
 	public Server() throws IOException {
 		// Init arrayList of clients
-		clients = new ArrayList<SocketServer>();
+		this.clients = new ArrayList<SocketServer>();
 		
 		// Init database-connection
-		/* {
-			db = new DatabaseHandler();
-			didConnect = true;
+		try {
+			this.db = new DatabaseHandler();
+			this.didConnect = true;
 		} catch (Exception e) {
-			didConnect = false;
-			System.out.println("Hallo");
-		}*/
+			this.didConnect = false;
+		}
 		
 		// Init serverSocket
-		serverSocket = new ServerSocket(9000);
-		serverSocket.setSoTimeout(Integer.MAX_VALUE);
+		this.serverSocket = new ServerSocket(9000);
+		this.serverSocket.setSoTimeout(Integer.MAX_VALUE);
 	}
 	
 	/*
@@ -46,28 +45,25 @@ public class Server extends Thread {
 		// Define a few variables
 		Socket server;
 		SocketServer client;
-		System.out.println("Running");
+		
 		// Listen until the program is killed
 		while(true) {
 			// Try to accept incoming requests
 			try {
 				// Accept request
-				server = serverSocket.accept();
+				server = this.serverSocket.accept();
 				
 				// Set alive forever to avoid sockettimeout
 				server.setKeepAlive(true);
-				System.out.println("Got connection!");
+				
 				// Initialize a new instance of ClientThread
-				client = new SocketServer(this, server);
+				client = new SocketServer(this, server, this.db);
 				client.start();
 				
 				// Add to ArrayList to preserve all the sockets
-				clients.add(client);
+				this.clients.add(client);
 			} catch(SocketTimeoutException s) {
-				System.out.println("Fuck1");
 			} catch(IOException e) {
-				
-				System.out.println("Fuck2");
 			}
 		}
 	}
@@ -78,9 +74,9 @@ public class Server extends Thread {
 	
 	public void notifyAllClients(String msg) {
 		// Loop all clients
-		for (int i = 0; i < clients.size(); i++) {
+		for (int i = 0; i < this.clients.size(); i++) {
 			// User each client's own sendMessage-method
-			clients.get(i).sendMessage(msg);
+			this.clients.get(i).sendMessage(msg);
 		}
 	}
 	
