@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,12 +32,11 @@ public class SocketServer extends Thread {
 	 * Constructor
 	 */
 	
-	public SocketServer(Server serv, Socket s, DatabaseHandler d) {
-		System.out.println("Called!!!");
+	public SocketServer(Server serv, Socket s) {
 		// Set initial data for user
 		this.server = serv;
 		this.socket = s;
-		this.db = d;
+		this.db = new DatabaseHandler();
 	}
 	
 	/*
@@ -89,6 +89,14 @@ public class SocketServer extends Thread {
 	
 	@SuppressWarnings("unchecked")
 	public void decodeMessage(String msg) {
+		// First reconnect to the database
+		try {
+			db.reconnect();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		// Decode json
 		JSONObject requestObj = (JSONObject)JSONValue.parse(msg);
 		
@@ -118,7 +126,9 @@ public class SocketServer extends Thread {
 				try {
 					isCorrectLogin = db.selectUser(username, password);
 				}
-				catch (Exception e) {}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
 				
 				// Check if it was successful or not
 				if (isCorrectLogin) {
@@ -134,25 +144,46 @@ public class SocketServer extends Thread {
 		}
 		else if (action.equals("appointment")) {
 			JSONArray appointments = new JSONArray();
-			JSONObject derp1 = new JSONObject();
-			derp1.put("id", 1);
-			derp1.put("title", "Fuck off");
-			derp1.put("description", "Todo 123");
-			derp1.put("start", 100000);
-			derp1.put("end", 100000);
-			derp1.put("place", "Todo 123");
-			derp1.put("room", null);
 			
-			derp1.put("participates", true);
-			derp1.put("hide", false);
-			derp1.put("alarm", false);
-			derp1.put("alarm_time", 0);
+			// Try to run the query
+			try {
+				ResultSet res = db.getAllAppointments(db.getUserId(username, password));
+				
+				while (res.next()) {
+					JSONObject tempJSONObj = new JSONObject();
+					
+					// Add each field to the object
+					tempJSONObj.put("id", res.getInt("id"));
+					tempJSONObj.put("title", res.getString("title"));
+					tempJSONObj.put("description", res.getString("description"));
+					tempJSONObj.put("location", res.getString("location"));
+					tempJSONObj.put("room", res.getInt("room"));
+					tempJSONObj.put("owner", res.getInt("owner"));
+					tempJSONObj.put("start", res.getString("appointmentStart"));
+					tempJSONObj.put("end", res.getString("appointmentEnd"));
+					tempJSONObj.put("participate", res.getBoolean("participate"));
+					tempJSONObj.put("hide", res.getBoolean("hide"));
+					tempJSONObj.put("alarm", res.getBoolean("alarm"));
+					tempJSONObj.put("alarmTime", res.getString("alarmTime"));
+					
+					// Add to array
+					appointments.add(tempJSONObj);
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
 
-			appointments.add(derp1);
+			// Add the array to the data
 			responseObj.put("data", appointments);
 		}
 		System.out.println("Sendt this: " + responseObj.toJSONString());
+		
+		// Send message
 		sendMessage(responseObj.toJSONString());
+		
+		// Close connection to database
+		db.closeConnection();
 	}
 	
 	/*

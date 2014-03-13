@@ -12,9 +12,9 @@ public class Server extends Thread {
 	 */
 	
 	private ServerSocket serverSocket;
-	private DatabaseHandler db;
 	private ArrayList<SocketServer> clients;
 	private boolean didConnect;
+	private int userId;
 	
 	/*
 	 * Constructor
@@ -23,14 +23,6 @@ public class Server extends Thread {
 	public Server() throws IOException {
 		// Init arrayList of clients
 		this.clients = new ArrayList<SocketServer>();
-		
-		// Init database-connection
-		try {
-			this.db = new DatabaseHandler();
-			this.didConnect = true;
-		} catch (Exception e) {
-			this.didConnect = false;
-		}
 		
 		// Init serverSocket
 		this.serverSocket = new ServerSocket(9000);
@@ -57,7 +49,7 @@ public class Server extends Thread {
 				server.setKeepAlive(true);
 				
 				// Initialize a new instance of ClientThread
-				client = new SocketServer(this, server, this.db);
+				client = new SocketServer(this, server);
 				client.start();
 				
 				// Add to ArrayList to preserve all the sockets
