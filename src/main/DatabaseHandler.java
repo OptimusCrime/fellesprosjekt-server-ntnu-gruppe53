@@ -3,15 +3,29 @@ package main;
 import java.sql.*;
 
 public class DatabaseHandler {
-	private Connection connect = null;
+	public Connection connect = null;
 	private PreparedStatement preparedStatement = null;
 	private ResultSet resultSet = null;
-	  
-	public DatabaseHandler() throws Exception {
+	
+	public void reconnect() throws Exception {
 		Class.forName("com.mysql.jdbc.Driver");
-		
 		connect = DriverManager.getConnection("jdbc:mysql://sql27.webhuset.no/optimuscrimene4?" + "user=optimuscrimene4&password=geTABU747");
 	}
+	
+	public void closeConnection() {
+		try {
+			if (resultSet != null) {
+				resultSet.close();
+			}
+			if (connect != null) {
+				connect.close();
+			}
+		} catch (Exception e) {}
+	}
+	
+	/*
+	 * Check if login is valid (does not return userid
+	 */
 	
 	public boolean selectUser(String username, String password) throws Exception {
 		// The query itself
@@ -24,5 +38,39 @@ public class DatabaseHandler {
 		
 		// Check if found a user
 		return resultSet.next();
+	}
+	
+	/*
+	 * Fetching login (used by all the queries)
+	 */
+	
+	public int getUserId(String username, String password) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT id FROM user WHERE email = ? AND password = ? LIMIT 1");
+		preparedStatement.setString(1, username);
+		preparedStatement.setString(2, password);
+		
+		// Execute the query
+		resultSet = preparedStatement.executeQuery();
+		
+		// Check if found a user
+		if (!resultSet.next()) {
+			System.out.println("Nigger");
+			throw new Exception("Error");
+			
+		}
+		
+		System.out.println(resultSet.getInt("id"));
+		
+		return resultSet.getInt("id");
+	}
+	
+	public ResultSet getAllAppointments(int id) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user = ? ORDER BY ap.id ASC");
+		preparedStatement.setInt(1, id);
+		
+		// Return queryset
+		return preparedStatement.executeQuery();
 	}
 }
