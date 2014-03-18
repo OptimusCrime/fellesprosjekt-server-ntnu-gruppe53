@@ -100,4 +100,17 @@ public class DatabaseHandler {
 		// Return queryset
 		return preparedStatement.executeQuery();
 	}
+	
+	/*
+	 * Get all employees
+	 */
+	
+	public ResultSet getAllEmployees(int id) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ?");
+		preparedStatement.setInt(1, id);
+		
+		// Return queryset
+		return preparedStatement.executeQuery();
+	}
 }

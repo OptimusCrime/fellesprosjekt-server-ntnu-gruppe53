@@ -174,20 +174,41 @@ public class SocketServer extends Thread {
 							// Add to array
 							appointments.add(tempJSONObj);
 						}
+						
+						// Add the array to the data
+						responseObj.put("data", appointments);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-		
-					// Add the array to the data
-					responseObj.put("data", appointments);
+					catch (Exception e) {}
 				}
 			}
 			else if (action.equals("employees")) {
 				// Employees
 				if (type.equals("get")) {
-					// Get all employees
-					// TODO
+					// Loading all employees
+					JSONArray employees = new JSONArray();
+					
+					// Try to run the query
+					try {
+						ResultSet res = db.getAllEmployees(db.getUserId(username, password));
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("id", res.getInt("id"));
+							tempJSONObj.put("email", res.getString("email"));
+							tempJSONObj.put("name", res.getString("name"));
+							
+							// Add to array
+							employees.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", employees);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			
