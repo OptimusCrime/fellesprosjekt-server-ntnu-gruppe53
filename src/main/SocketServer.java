@@ -15,6 +15,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+/*
+ * SocketServer
+ * 
+ * Class that deals with one specific socket-connection
+ * 
+ */
+
 public class SocketServer extends Thread {
 	
 	/*
@@ -25,7 +32,6 @@ public class SocketServer extends Thread {
 	private Socket socket;
 	private DataOutputStream out;
 	private DataInputStream in;
-
 	private DatabaseHandler db;
 	
 	/*
@@ -33,7 +39,7 @@ public class SocketServer extends Thread {
 	 */
 	
 	public SocketServer(Server serv, Socket s) {
-		// Set initial data for user
+		// Set initial
 		this.server = serv;
 		this.socket = s;
 		this.db = new DatabaseHandler();
@@ -75,8 +81,10 @@ public class SocketServer extends Thread {
 				
 				// Check if the variable got actual content
 				if (msg.length() > 0) {
-					// Decode the content (formatted as json)
+					// DEBUG TODO
 					System.out.println("Got this: " + msg);
+					
+					// Decode the content (formatted as json)
 					decodeMessage(msg);
 				}
 			} catch (IOException e) {}
@@ -92,109 +100,141 @@ public class SocketServer extends Thread {
 		// First reconnect to the database
 		try {
 			db.reconnect();
+			
+			// Decode json
+			JSONObject requestObj = (JSONObject)JSONValue.parse(msg);
+			
+			// Get action and type
+			String action = (String) requestObj.get("action");
+			String type = (String) requestObj.get("type");
+			
+			// Get login
+			JSONObject loginObj = (JSONObject) requestObj.get("login");
+			String username = (String) loginObj.get("username");
+			String password = (String) loginObj.get("password");
+			
+			// Create response-object
+			JSONObject responseObj = new JSONObject();
+			responseObj.put("method", "response");
+			responseObj.put("action", action);
+			responseObj.put("type", type);
+			
+			// Check what action we're dealing with
+			if (action.equals("login")) {
+				// Login
+				if (type.equals("put")) {
+					// Set login to false first
+					boolean isCorrectLogin = false;
+					
+					// Try to run the query
+					try {
+						isCorrectLogin = db.selectUser(username, password);
+					}
+					catch (Exception e) {}
+					
+					// Check if it was successful or not
+					if (isCorrectLogin) {
+						responseObj.put("code", 200);
+					}
+					else {
+						responseObj.put("code", 500);
+					}
+				}
+			}
+			else if (action.equals("logout")) {
+				// TODO
+			}
+			else if (action.equals("appoinements")) {
+				// Appoinement
+				if (type.equals("get")) {
+					// Loading all appointments
+					JSONArray appointments = new JSONArray();
+					
+					// Try to run the query
+					try {
+						ResultSet res = db.getAllAppointments(db.getUserId(username, password));
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("id", res.getInt("id"));
+							tempJSONObj.put("title", res.getString("title"));
+							tempJSONObj.put("description", res.getString("description"));
+							tempJSONObj.put("location", res.getString("location"));
+							tempJSONObj.put("room", res.getInt("room"));
+							tempJSONObj.put("owner", res.getInt("owner"));
+							tempJSONObj.put("start", res.getString("appointmentStart"));
+							tempJSONObj.put("end", res.getString("appointmentEnd"));
+							tempJSONObj.put("participate", res.getBoolean("participate"));
+							tempJSONObj.put("hide", res.getBoolean("hide"));
+							tempJSONObj.put("alarm", res.getBoolean("alarm"));
+							tempJSONObj.put("alarm_time", res.getString("alarmTime"));
+							
+							// Add to array
+							appointments.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", appointments);
+					}
+					catch (Exception e) {}
+				}
+			}
+			else if (action.equals("employees")) {
+				// Employees
+				if (type.equals("get")) {
+					// Loading all employees
+					JSONArray employees = new JSONArray();
+					
+					// Try to run the query
+					try {
+						ResultSet res = db.getAllEmployees(db.getUserId(username, password));
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("id", res.getInt("id"));
+							tempJSONObj.put("email", res.getString("email"));
+							tempJSONObj.put("name", res.getString("name"));
+							
+							// Add to array
+							employees.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", employees);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			// Debug TODO
+			System.out.println("Sendt this: " + responseObj.toJSONString());
+			
+			// Send message
+			if (responseObj != null) {
+				sendMessage(responseObj.toJSONString());
+			}
+			
+			// Close connection to database
+			db.closeConnection();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		// Decode json
-		JSONObject requestObj = (JSONObject)JSONValue.parse(msg);
-		
-		// Get action and type
-		String action = (String) requestObj.get("action");
-		String type = (String) requestObj.get("type");
-		
-		// Get login
-		JSONObject loginObj = (JSONObject) requestObj.get("login");
-		String username = (String) loginObj.get("username");
-		String password = (String) loginObj.get("password");
-		
-		// Create response-object
-		JSONObject responseObj = new JSONObject();
-		responseObj.put("method", "response");
-		responseObj.put("action", action);
-		responseObj.put("type", type);
-		
-		// Check what action we're dealing with
-		if (action.equals("login")) {
-			// Login
-			if (type.equals("put")) {
-				// Set login to false first
-				boolean isCorrectLogin = false;
-				
-				// Try to run the query
-				try {
-					isCorrectLogin = db.selectUser(username, password);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				// Check if it was successful or not
-				if (isCorrectLogin) {
-					responseObj.put("code", 200);
-				}
-				else {
-					responseObj.put("code", 500);
-				}
-			}
-		}
-		else if (action.equals("logout")) {
-			
-		}
-		else if (action.equals("appointment")) {
-			JSONArray appointments = new JSONArray();
-			
-			// Try to run the query
-			try {
-				ResultSet res = db.getAllAppointments(db.getUserId(username, password));
-				
-				while (res.next()) {
-					JSONObject tempJSONObj = new JSONObject();
-					
-					// Add each field to the object
-					tempJSONObj.put("id", res.getInt("id"));
-					tempJSONObj.put("title", res.getString("title"));
-					tempJSONObj.put("description", res.getString("description"));
-					tempJSONObj.put("location", res.getString("location"));
-					tempJSONObj.put("room", res.getInt("room"));
-					tempJSONObj.put("owner", res.getInt("owner"));
-					tempJSONObj.put("start", res.getString("appointmentStart"));
-					tempJSONObj.put("end", res.getString("appointmentEnd"));
-					tempJSONObj.put("participate", res.getBoolean("participate"));
-					tempJSONObj.put("hide", res.getBoolean("hide"));
-					tempJSONObj.put("alarm", res.getBoolean("alarm"));
-					tempJSONObj.put("alarm_time", res.getString("alarmTime"));
-					
-					// Add to array
-					appointments.add(tempJSONObj);
-				}
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			// Add the array to the data
-			responseObj.put("data", appointments);
-		}
-		System.out.println("Sendt this: " + responseObj.toJSONString());
-		
-		// Send message
-		sendMessage(responseObj.toJSONString());
-		
-		// Close connection to database
-		db.closeConnection();
 	}
 	
 	/*
-	 * Send the message to the stream (only self)
+	 * Send the message to the stream
 	 */
 	
 	public void sendMessage(String s) {
 		try {
 			out.writeUTF(s);
-		} catch (IOException e) {
-			System.out.println("Something died");
-		}
+		} catch (IOException e) {}
 	}
 }

@@ -2,15 +2,38 @@ package main;
 
 import java.sql.*;
 
+/*
+ * DatabaseHandler
+ * 
+ * Handles connection to the database
+ * 
+ */
+
 public class DatabaseHandler {
+	
+	/*
+	 * Variables we need in order to connect to the database
+	 */
+	
 	public Connection connect = null;
 	private PreparedStatement preparedStatement = null;
 	private ResultSet resultSet = null;
 	
+	/*
+	 * (Re)Connect to the database
+	 */
+	
 	public void reconnect() throws Exception {
+		// Load datbase-driver
 		Class.forName("com.mysql.jdbc.Driver");
+		
+		// Connect to MySQL here
 		connect = DriverManager.getConnection("jdbc:mysql://sql27.webhuset.no/optimuscrimene4?" + "user=optimuscrimene4&password=geTABU747");
 	}
+	
+	/*
+	 * Method for closing the connection
+	 */
 	
 	public void closeConnection() {
 		try {
@@ -65,9 +88,26 @@ public class DatabaseHandler {
 		return resultSet.getInt("id");
 	}
 	
+	/*
+	 * Get all appointments
+	 */
+	
 	public ResultSet getAllAppointments(int id) throws Exception {
 		// The query itself
 		preparedStatement = connect.prepareStatement("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user = ? ORDER BY ap.id ASC");
+		preparedStatement.setInt(1, id);
+		
+		// Return queryset
+		return preparedStatement.executeQuery();
+	}
+	
+	/*
+	 * Get all employees
+	 */
+	
+	public ResultSet getAllEmployees(int id) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ? ORDER BY name ASC");
 		preparedStatement.setInt(1, id);
 		
 		// Return queryset

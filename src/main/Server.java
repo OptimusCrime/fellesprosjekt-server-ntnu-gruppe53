@@ -5,6 +5,13 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
+/*
+ * Server
+ * 
+ * The main-sever-class that delegates Threads
+ * 
+ */
+
 public class Server extends Thread {
 	
 	/*
@@ -50,6 +57,8 @@ public class Server extends Thread {
 				
 				// Initialize a new instance of ClientThread
 				client = new SocketServer(this, server);
+				
+				// Start the thread for this user
 				client.start();
 				
 				// Add to ArrayList to preserve all the sockets
@@ -57,18 +66,6 @@ public class Server extends Thread {
 			} catch(SocketTimeoutException s) {
 			} catch(IOException e) {
 			}
-		}
-	}
-	
-	/*
-	 * Send message to every user in the chat
-	 */
-	
-	public void notifyAllClients(String msg) {
-		// Loop all clients
-		for (int i = 0; i < this.clients.size(); i++) {
-			// User each client's own sendMessage-method
-			this.clients.get(i).sendMessage(msg);
 		}
 	}
 	
@@ -84,9 +81,6 @@ public class Server extends Thread {
 			
 			// Run thread
 			t.start();
-		} catch(IOException e) {
-			// Something went to hell
-			e.printStackTrace();
-		}
+		} catch(IOException e) {}
 	}
 }
