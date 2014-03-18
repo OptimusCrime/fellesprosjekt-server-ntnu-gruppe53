@@ -144,7 +144,7 @@ public class SocketServer extends Thread {
 			else if (action.equals("logout")) {
 				// TODO
 			}
-			else if (action.equals("appoinements")) {
+			else if (action.equals("appointments")) {
 				// Appoinement
 				if (type.equals("get")) {
 					// Loading all appointments
