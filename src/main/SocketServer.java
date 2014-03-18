@@ -15,6 +15,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+/*
+ * SocketServer
+ * 
+ * Class that deals with one specific socket-connection
+ * 
+ */
+
 public class SocketServer extends Thread {
 	
 	/*
@@ -25,7 +32,6 @@ public class SocketServer extends Thread {
 	private Socket socket;
 	private DataOutputStream out;
 	private DataInputStream in;
-
 	private DatabaseHandler db;
 	
 	/*
@@ -33,7 +39,7 @@ public class SocketServer extends Thread {
 	 */
 	
 	public SocketServer(Server serv, Socket s) {
-		// Set initial data for user
+		// Set initial
 		this.server = serv;
 		this.socket = s;
 		this.db = new DatabaseHandler();
@@ -75,8 +81,10 @@ public class SocketServer extends Thread {
 				
 				// Check if the variable got actual content
 				if (msg.length() > 0) {
-					// Decode the content (formatted as json)
+					// DEBUG TODO
 					System.out.println("Got this: " + msg);
+					
+					// Decode the content (formatted as json)
 					decodeMessage(msg);
 				}
 			} catch (IOException e) {}
@@ -122,9 +130,7 @@ public class SocketServer extends Thread {
 					try {
 						isCorrectLogin = db.selectUser(username, password);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 					
 					// Check if it was successful or not
 					if (isCorrectLogin) {
