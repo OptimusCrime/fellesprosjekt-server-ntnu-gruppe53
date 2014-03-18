@@ -107,7 +107,7 @@ public class DatabaseHandler {
 	
 	public ResultSet getAllEmployees(int id) throws Exception {
 		// The query itself
-		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ?");
+		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ? ORDER BY name ASC");
 		preparedStatement.setInt(1, id);
 		
 		// Return queryset
