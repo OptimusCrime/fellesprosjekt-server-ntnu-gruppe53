@@ -95,7 +95,7 @@ public class DatabaseHandler {
 		statement = connect.createStatement();
 		
 		// Return queryset
-		return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") GROUP BY ap.id ORDER BY ap.id ASC");
+		return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") ORDER BY ap.id ASC");
 	}
 	
 	/*

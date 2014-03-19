@@ -193,6 +193,7 @@ public class SocketServer extends Thread {
 							tempJSONObj.put("hide", res.getBoolean("hide"));
 							tempJSONObj.put("alarm", res.getBoolean("alarm"));
 							tempJSONObj.put("alarm_time", res.getString("alarmTime"));
+							tempJSONObj.put("user", res.getInt("user"));
 							
 							// Add to array
 							appointments.add(tempJSONObj);
