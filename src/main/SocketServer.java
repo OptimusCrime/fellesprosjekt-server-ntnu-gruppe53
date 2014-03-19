@@ -189,7 +189,7 @@ public class SocketServer extends Thread {
 					
 					// Try to run the query
 					try {
-						ResultSet res = db.getAllEmployees(db.getUserId(username, password));
+						ResultSet res = db.getAllEmployees();
 						
 						while (res.next()) {
 							JSONObject tempJSONObj = new JSONObject();

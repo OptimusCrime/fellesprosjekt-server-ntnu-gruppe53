@@ -17,6 +17,7 @@ public class DatabaseHandler {
 	
 	public Connection connect = null;
 	private PreparedStatement preparedStatement = null;
+	private Statement statement = null;
 	private ResultSet resultSet = null;
 	
 	/*
@@ -105,12 +106,11 @@ public class DatabaseHandler {
 	 * Get all employees
 	 */
 	
-	public ResultSet getAllEmployees(int id) throws Exception {
-		// The query itself
-		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ? ORDER BY name ASC");
-		preparedStatement.setInt(1, id);
+	public ResultSet getAllEmployees() throws Exception {
+		// Create statement
+		statement = connect.createStatement();
 		
 		// Return queryset
-		return preparedStatement.executeQuery();
+		return statement.executeQuery("SELECT id, email, name FROM user ORDER BY name ASC");
 	}
 }
