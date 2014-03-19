@@ -90,13 +90,12 @@ public class DatabaseHandler {
 	 * Get all appointments
 	 */
 	
-	public ResultSet getAllAppointments(int id) throws Exception {
-		// The query itself
-		preparedStatement = connect.prepareStatement("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user = ? ORDER BY ap.id ASC");
-		preparedStatement.setInt(1, id);
+	public ResultSet getAllAppointments(String ids) throws Exception {
+		// Create statement
+		statement = connect.createStatement();
 		
 		// Return queryset
-		return preparedStatement.executeQuery();
+		return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") GROUP BY ap.id ORDER BY ap.id ASC");
 	}
 	
 	/*
