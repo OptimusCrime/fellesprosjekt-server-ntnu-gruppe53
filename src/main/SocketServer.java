@@ -87,7 +87,13 @@ public class SocketServer extends Thread {
 					// Decode the content (formatted as json)
 					decodeMessage(msg);
 				}
-			} catch (IOException e) {}
+			} catch (IOException e) {
+				// Kill thread
+				interrupt();
+				
+				// Break thread
+				break;
+			}
 		}
 	}
 	
