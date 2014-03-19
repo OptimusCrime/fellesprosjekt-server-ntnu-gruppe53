@@ -223,9 +223,7 @@ public class SocketServer extends Thread {
 			// Close connection to database
 			db.closeConnection();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		catch (Exception e) {}
 	}
 	
 	/*
