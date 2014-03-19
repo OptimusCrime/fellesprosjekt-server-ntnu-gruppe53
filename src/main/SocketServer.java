@@ -140,6 +140,8 @@ public class SocketServer extends Thread {
 					
 					// Check if it was successful or not
 					if (isCorrectLogin) {
+						int userId = db.getUserId(username, password);
+						responseObj.put("id", userId);
 						responseObj.put("code", 200);
 					}
 					else {

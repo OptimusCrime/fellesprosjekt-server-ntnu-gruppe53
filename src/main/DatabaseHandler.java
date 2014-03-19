@@ -79,12 +79,9 @@ public class DatabaseHandler {
 		
 		// Check if found a user
 		if (!resultSet.next()) {
-			System.out.println("Nigger");
 			throw new Exception("Error");
 			
 		}
-		
-		System.out.println(resultSet.getInt("id"));
 		
 		return resultSet.getInt("id");
 	}
