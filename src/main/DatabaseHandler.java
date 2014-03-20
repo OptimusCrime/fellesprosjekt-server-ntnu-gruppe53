@@ -137,6 +137,6 @@ public class DatabaseHandler {
 		System.out.println("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > 0");
 		
 		// Return queryset
-		return statement.executeQuery("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > 0");
+		return statement.executeQuery("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > " + num + " ORDER BY capcacity ASC");
 	}
 }
