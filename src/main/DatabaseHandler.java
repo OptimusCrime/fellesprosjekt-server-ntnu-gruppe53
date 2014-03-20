@@ -29,7 +29,7 @@ public class DatabaseHandler {
 		Class.forName("com.mysql.jdbc.Driver");
 		
 		// Connect to MySQL here
-		connect = DriverManager.getConnection("jdbc:mysql://sql27.webhuset.no/optimuscrimene4?" + "user=optimuscrimene4&password=geTABU747");
+		connect = DriverManager.getConnection("jdbc:mysql://sql27.webhuset.no/optimuscrimene4?user=optimuscrimene4&password=geTABU747");
 	}
 	
 	/*
@@ -94,8 +94,12 @@ public class DatabaseHandler {
 		// Create statement
 		statement = connect.createStatement();
 		
-		// Return queryset
-		return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") ORDER BY ap.id ASC");
+		if (ids.length() == 0) {
+			return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user = NULL ORDER BY ap.id ASC");
+		}
+		else {
+			return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") ORDER BY ap.id ASC");
+		}
 	}
 	
 	/*
@@ -108,5 +112,31 @@ public class DatabaseHandler {
 		
 		// Return queryset
 		return statement.executeQuery("SELECT id, email, name FROM user ORDER BY name ASC");
+	}
+	
+	/*
+	 * Get all rooms
+	 */
+	
+	public ResultSet getAllRooms() throws Exception {
+		// Create statement
+		statement = connect.createStatement();
+		
+		// Return queryset
+		return statement.executeQuery("SELECT id, name, capacity FROM room ORDER BY id ASC");
+	}
+	
+	/*
+	 * Get available rooms
+	 */
+	
+	public ResultSet getRoomsAvailable(String from, String to, int num) throws Exception {
+		// Create statement
+		statement = connect.createStatement();
+		
+		System.out.println("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > 0");
+		
+		// Return queryset
+		return statement.executeQuery("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > 0");
 	}
 }

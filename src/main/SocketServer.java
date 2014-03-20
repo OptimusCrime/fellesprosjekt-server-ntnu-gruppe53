@@ -173,8 +173,13 @@ public class SocketServer extends Thread {
 							calendarIds += Integer.toString(new BigDecimal((long) calendarObj.get(i)).intValueExact()) + ",";
 						}
 						
+						// Fix for empty search
+						if (calendarIds.length() > 0) {
+							calendarIds = calendarIds.substring(0, calendarIds.length() - 1);
+						}
+						
 						// The query
-						ResultSet res = db.getAllAppointments(calendarIds.substring(0, calendarIds.length() - 1));
+						ResultSet res = db.getAllAppointments(calendarIds);
 						
 						while (res.next()) {
 							System.out.println("Has next...");
@@ -215,6 +220,9 @@ public class SocketServer extends Thread {
 					
 					// Try to run the query
 					try {
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
 						ResultSet res = db.getAllEmployees();
 						
 						while (res.next()) {
@@ -231,6 +239,64 @@ public class SocketServer extends Thread {
 						
 						// Add the array to the data
 						responseObj.put("data", employees);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			else if (action.equals("room")) {
+				// Employees
+				if (type.equals("get")) {
+					// Loading all employees
+					JSONArray rooms = new JSONArray();
+					
+					// Try to run the query
+					try {
+						ResultSet res = db.getAllRooms();
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("id", res.getInt("id"));
+							tempJSONObj.put("name", res.getString("name"));
+							tempJSONObj.put("capacity", res.getInt("capacity"));
+							
+							// Add to array
+							rooms.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", rooms);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if (type.equals("gets")) {
+					// Loading the data dumped
+					JSONObject roomInfo = (JSONObject) requestObj.get("data");
+					String dateFrom = (String) roomInfo.get("from");
+					String dateTo = (String) roomInfo.get("to");
+					int num = new BigDecimal((long) roomInfo.get("num")).intValueExact();
+					
+					
+					// Try to run the query
+					try {
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
+						ResultSet res = db.getRoomsAvailable(dateFrom, dateTo, num);
+						
+						JSONArray tempJSONArr = new JSONArray();
+						while (res.next()) {
+							// Add each field to the object
+							tempJSONArr.add((int) res.getInt("id"));
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", tempJSONArr);
 					}
 					catch (Exception e) {
 						e.printStackTrace();
