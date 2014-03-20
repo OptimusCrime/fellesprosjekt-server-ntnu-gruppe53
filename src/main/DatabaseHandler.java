@@ -17,6 +17,7 @@ public class DatabaseHandler {
 	
 	public Connection connect = null;
 	private PreparedStatement preparedStatement = null;
+	private Statement statement = null;
 	private ResultSet resultSet = null;
 	
 	/*
@@ -78,12 +79,9 @@ public class DatabaseHandler {
 		
 		// Check if found a user
 		if (!resultSet.next()) {
-			System.out.println("Nigger");
 			throw new Exception("Error");
 			
 		}
-		
-		System.out.println(resultSet.getInt("id"));
 		
 		return resultSet.getInt("id");
 	}
@@ -92,25 +90,23 @@ public class DatabaseHandler {
 	 * Get all appointments
 	 */
 	
-	public ResultSet getAllAppointments(int id) throws Exception {
-		// The query itself
-		preparedStatement = connect.prepareStatement("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user = ? ORDER BY ap.id ASC");
-		preparedStatement.setInt(1, id);
+	public ResultSet getAllAppointments(String ids) throws Exception {
+		// Create statement
+		statement = connect.createStatement();
 		
 		// Return queryset
-		return preparedStatement.executeQuery();
+		return statement.executeQuery("SELECT ap.* , ua.* FROM appointment ap LEFT JOIN userAppointment AS ua ON ap.id = ua.appointment WHERE ua.user IN (" + ids + ") ORDER BY ap.id ASC");
 	}
 	
 	/*
 	 * Get all employees
 	 */
 	
-	public ResultSet getAllEmployees(int id) throws Exception {
-		// The query itself
-		preparedStatement = connect.prepareStatement("SELECT id, email, name FROM user WHERE id != ? ORDER BY name ASC");
-		preparedStatement.setInt(1, id);
+	public ResultSet getAllEmployees() throws Exception {
+		// Create statement
+		statement = connect.createStatement();
 		
 		// Return queryset
-		return preparedStatement.executeQuery();
+		return statement.executeQuery("SELECT id, email, name FROM user ORDER BY name ASC");
 	}
 }

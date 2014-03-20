@@ -3,6 +3,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.util.Date;
@@ -14,6 +15,8 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
+import com.mysql.jdbc.StringUtils;
 
 /*
  * SocketServer
@@ -87,7 +90,13 @@ public class SocketServer extends Thread {
 					// Decode the content (formatted as json)
 					decodeMessage(msg);
 				}
-			} catch (IOException e) {}
+			} catch (IOException e) {
+				// Kill thread
+				interrupt();
+				
+				// Break thread
+				break;
+			}
 		}
 	}
 	
@@ -134,6 +143,8 @@ public class SocketServer extends Thread {
 					
 					// Check if it was successful or not
 					if (isCorrectLogin) {
+						int userId = db.getUserId(username, password);
+						responseObj.put("id", userId);
 						responseObj.put("code", 200);
 					}
 					else {
@@ -152,9 +163,21 @@ public class SocketServer extends Thread {
 					
 					// Try to run the query
 					try {
-						ResultSet res = db.getAllAppointments(db.getUserId(username, password));
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
+						// Get ids to fetch
+						JSONArray calendarObj = (JSONArray) requestObj.get("data");
+						String calendarIds = "";
+						for (int i = 0; i < calendarObj.size(); i++) {
+							calendarIds += Integer.toString(new BigDecimal((long) calendarObj.get(i)).intValueExact()) + ",";
+						}
+						
+						// The query
+						ResultSet res = db.getAllAppointments(calendarIds.substring(0, calendarIds.length() - 1));
 						
 						while (res.next()) {
+							System.out.println("Has next...");
 							JSONObject tempJSONObj = new JSONObject();
 							
 							// Add each field to the object
@@ -170,6 +193,7 @@ public class SocketServer extends Thread {
 							tempJSONObj.put("hide", res.getBoolean("hide"));
 							tempJSONObj.put("alarm", res.getBoolean("alarm"));
 							tempJSONObj.put("alarm_time", res.getString("alarmTime"));
+							tempJSONObj.put("user", res.getInt("user"));
 							
 							// Add to array
 							appointments.add(tempJSONObj);
@@ -178,7 +202,9 @@ public class SocketServer extends Thread {
 						// Add the array to the data
 						responseObj.put("data", appointments);
 					}
-					catch (Exception e) {}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			else if (action.equals("employees")) {
@@ -189,7 +215,7 @@ public class SocketServer extends Thread {
 					
 					// Try to run the query
 					try {
-						ResultSet res = db.getAllEmployees(db.getUserId(username, password));
+						ResultSet res = db.getAllEmployees();
 						
 						while (res.next()) {
 							JSONObject tempJSONObj = new JSONObject();
