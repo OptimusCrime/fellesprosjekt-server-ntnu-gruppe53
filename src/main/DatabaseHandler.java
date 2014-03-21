@@ -184,4 +184,13 @@ public class DatabaseHandler {
             throw new SQLException("Creating user failed, no generated key obtained.");
         }
 	}
+	
+	public ResultSet getAllParticipates(int appointment) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT user, participate, hide FROM userAppointment WHERE appointment = ?");
+		preparedStatement.setInt(1, appointment);
+		
+		// Execute the query
+		return preparedStatement.executeQuery();
+	}
 }

@@ -249,6 +249,37 @@ public class SocketServer extends Thread {
 					}
 					catch (Exception e) {}
 				}
+				else if (type.equals("sub-get")) {
+					// Loading all appointments
+					JSONArray appointments = new JSONArray();
+					
+					// Try to run the query
+					try {
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
+						ResultSet res = db.getAllParticipates(new BigDecimal((long) requestObj.get("id")).intValueExact());
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("user", res.getInt("user"));
+							tempJSONObj.put("participate", res.getInt("participate"));
+							tempJSONObj.put("hide", res.getInt("hide"));
+							
+							// Add to array
+							appointments.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", appointments);
+						responseObj.put("id", new BigDecimal((long) requestObj.get("id")).intValueExact());
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
  			}
 			else if (action.equals("employees")) {
 				// Employees
