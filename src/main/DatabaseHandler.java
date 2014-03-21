@@ -135,8 +135,6 @@ public class DatabaseHandler {
 		// Create statement
 		statement = connect.createStatement();
 		
-		System.out.println("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > 0");
-		
 		// Return queryset
 		return statement.executeQuery("SELECT r.* FROM room r WHERE id NOT IN (SELECT room FROM appointment WHERE appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + from + "') OR (appointmentStart > DATE('" + from + "') AND appointmentEnd > DATE('" + to + "')) OR (appointmentStart < DATE('" + from + "') AND appointmentEnd > DATE('" + to + "'))) AND capacity > " + num + " ORDER BY capacity ASC");
 	}
@@ -185,5 +183,25 @@ public class DatabaseHandler {
         } else {
             throw new SQLException("Creating user failed, no generated key obtained.");
         }
+	}
+	
+	public ResultSet getAllParticipates(int appointment) throws Exception {
+		// The query itself
+		preparedStatement = connect.prepareStatement("SELECT user, participate, hide FROM userAppointment WHERE appointment = ?");
+		preparedStatement.setInt(1, appointment);
+		
+		// Execute the query
+		return preparedStatement.executeQuery();
+	}
+	
+	public void updateParticipates(int user, int id, int status) throws Exception {
+		// :D:D:D
+		preparedStatement = connect.prepareStatement("UPDATE userAppointment SET participate = ? WHERE appointment = ? AND user = ?");
+		preparedStatement.setInt(1, status);
+		preparedStatement.setInt(2, id);
+		preparedStatement.setInt(3, user);
+		
+		// Execute the query
+		preparedStatement.executeUpdate();
 	}
 }
