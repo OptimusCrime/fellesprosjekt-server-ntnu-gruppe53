@@ -193,4 +193,15 @@ public class DatabaseHandler {
 		// Execute the query
 		return preparedStatement.executeQuery();
 	}
+	
+	public void updateParticipates(int user, int id, int status) throws Exception {
+		// :D:D:D
+		preparedStatement = connect.prepareStatement("UPDATE userAppointment SET participate = ? WHERE appointment = ? AND user = ?");
+		preparedStatement.setInt(1, status);
+		preparedStatement.setInt(2, id);
+		preparedStatement.setInt(3, user);
+		
+		// Execute the query
+		preparedStatement.executeUpdate();
+	}
 }

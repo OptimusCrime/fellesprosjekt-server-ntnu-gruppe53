@@ -276,9 +276,15 @@ public class SocketServer extends Thread {
 						responseObj.put("data", appointments);
 						responseObj.put("id", new BigDecimal((long) requestObj.get("id")).intValueExact());
 					}
-					catch (Exception e) {
-						e.printStackTrace();
+					catch (Exception e) {}
+				}
+				else if (type.equals("sub-post")) {
+					// Try to run the query
+					try {
+						// GGOGOGOGO
+						db.updateParticipates(db.getUserId(username, password), new BigDecimal((long) requestObj.get("id")).intValueExact(), new BigDecimal((long) requestObj.get("status")).intValueExact());
 					}
+					catch (Exception e) {}
 				}
  			}
 			else if (action.equals("employees")) {
