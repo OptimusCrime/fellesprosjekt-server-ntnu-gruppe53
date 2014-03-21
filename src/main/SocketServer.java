@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.Socket;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,8 @@ public class SocketServer extends Thread {
 	private DataOutputStream out;
 	private DataInputStream in;
 	private DatabaseHandler db;
+	private Integer userId;
+	private String calendarIds;
 	
 	/*
 	 * Constructor
@@ -46,6 +49,8 @@ public class SocketServer extends Thread {
 		this.server = serv;
 		this.socket = s;
 		this.db = new DatabaseHandler();
+		
+		this.userId = null;
 	}
 	
 	/*
@@ -146,6 +151,9 @@ public class SocketServer extends Thread {
 						int userId = db.getUserId(username, password);
 						responseObj.put("id", userId);
 						responseObj.put("code", 200);
+						
+						// Store for later
+						this.userId = userId;
 					}
 					else {
 						responseObj.put("code", 500);
@@ -173,8 +181,16 @@ public class SocketServer extends Thread {
 							calendarIds += Integer.toString(new BigDecimal((long) calendarObj.get(i)).intValueExact()) + ",";
 						}
 						
+						// Fix for empty search
+						if (calendarIds.length() > 0) {
+							calendarIds = calendarIds.substring(0, calendarIds.length() - 1);
+						}
+						
+						// Store for later
+						this.calendarIds = calendarIds;
+						
 						// The query
-						ResultSet res = db.getAllAppointments(calendarIds.substring(0, calendarIds.length() - 1));
+						ResultSet res = db.getAllAppointments(calendarIds);
 						
 						while (res.next()) {
 							System.out.println("Has next...");
@@ -206,7 +222,42 @@ public class SocketServer extends Thread {
 						e.printStackTrace();
 					}
 				}
-			}
+				else if (type.equals("post")) {
+					// Create new appointment, all hell is about to break loose
+					try {
+						JSONObject appointmentObj = (JSONObject) requestObj.get("data");
+						String title = (String) appointmentObj.get("title");
+						String description = (String) appointmentObj.get("desc");
+						String from = (String) appointmentObj.get("from");
+						String to = (String) appointmentObj.get("to");
+						
+						Integer room = null;
+						try {
+							room = new BigDecimal((long) appointmentObj.get("room")).intValueExact();
+						}
+						catch (Exception e) {}
+						
+						int participants = new BigDecimal((long) appointmentObj.get("participants")).intValueExact();
+						int participantsArrNum = new BigDecimal((long) appointmentObj.get("participants_list_num")).intValueExact();
+						ArrayList<Integer> participantsArr = new ArrayList<Integer>();
+						if (participantsArrNum > 0) {
+							JSONArray innerAppointmentObj = (JSONArray) appointmentObj.get("participants_list");
+							for (int i = 0; i < participantsArrNum; i++) {
+								participantsArr.add(new BigDecimal((long) innerAppointmentObj.get(i)).intValueExact());
+							}
+						}
+						
+						// GOGOGOGO
+						db.createNewAppointment(db.getUserId(username, password), title, description, from, to, room, participants, participantsArr);
+						
+						// Notify
+						this.server.notifyChange("appointments", "get", participantsArr);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+ 			}
 			else if (action.equals("employees")) {
 				// Employees
 				if (type.equals("get")) {
@@ -215,6 +266,9 @@ public class SocketServer extends Thread {
 					
 					// Try to run the query
 					try {
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
 						ResultSet res = db.getAllEmployees();
 						
 						while (res.next()) {
@@ -231,6 +285,64 @@ public class SocketServer extends Thread {
 						
 						// Add the array to the data
 						responseObj.put("data", employees);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			else if (action.equals("room")) {
+				// Employees
+				if (type.equals("get")) {
+					// Loading all employees
+					JSONArray rooms = new JSONArray();
+					
+					// Try to run the query
+					try {
+						ResultSet res = db.getAllRooms();
+						
+						while (res.next()) {
+							JSONObject tempJSONObj = new JSONObject();
+							
+							// Add each field to the object
+							tempJSONObj.put("id", res.getInt("id"));
+							tempJSONObj.put("name", res.getString("name"));
+							tempJSONObj.put("capacity", res.getInt("capacity"));
+							
+							// Add to array
+							rooms.add(tempJSONObj);
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", rooms);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if (type.equals("gets")) {
+					// Loading the data dumped
+					JSONObject roomInfo = (JSONObject) requestObj.get("data");
+					String dateFrom = (String) roomInfo.get("from");
+					String dateTo = (String) roomInfo.get("to");
+					int num = new BigDecimal((long) roomInfo.get("num")).intValueExact();
+					
+					
+					// Try to run the query
+					try {
+						// Fetch user to make sure we're logged in
+						db.getUserId(username, password);
+						
+						ResultSet res = db.getRoomsAvailable(dateFrom, dateTo, num);
+						
+						JSONArray tempJSONArr = new JSONArray();
+						while (res.next()) {
+							// Add each field to the object
+							tempJSONArr.add((int) res.getInt("id"));
+						}
+						
+						// Add the array to the data
+						responseObj.put("data", tempJSONArr);
 					}
 					catch (Exception e) {
 						e.printStackTrace();
@@ -262,5 +374,69 @@ public class SocketServer extends Thread {
 		try {
 			out.writeUTF(s);
 		} catch (IOException e) {}
+	}
+	
+	/*
+	 * Return the userId for this user
+	 */
+	
+	public Integer getUserId() {
+		return this.userId;
+	}
+	
+	/*
+	 * Notification incomming from server
+	 */
+	
+	public void sendNotify(String t, String p) {
+		if (t.equals("appointments")) {
+			if (p.equals("get")) {
+				System.out.println("Came to send, ojfhdlkfjhsdklfjhdsf");
+				// Try to run the query
+				try {
+					// Create response-object
+					JSONObject responseObj = new JSONObject();
+					responseObj.put("method", "response");
+					responseObj.put("action", "appointments");
+					responseObj.put("type", "get");
+					
+					JSONArray appointments = new JSONArray();
+					
+					// The query
+					ResultSet res = db.getAllAppointments(this.calendarIds);
+					
+					while (res.next()) {
+						System.out.println("Has next...");
+						JSONObject tempJSONObj = new JSONObject();
+						
+						// Add each field to the object
+						tempJSONObj.put("id", res.getInt("id"));
+						tempJSONObj.put("title", res.getString("title"));
+						tempJSONObj.put("description", res.getString("description"));
+						tempJSONObj.put("location", res.getString("location"));
+						tempJSONObj.put("room", res.getInt("room"));
+						tempJSONObj.put("owner", res.getInt("owner"));
+						tempJSONObj.put("start", res.getString("appointmentStart"));
+						tempJSONObj.put("end", res.getString("appointmentEnd"));
+						tempJSONObj.put("participate", res.getBoolean("participate"));
+						tempJSONObj.put("hide", res.getBoolean("hide"));
+						tempJSONObj.put("alarm", res.getBoolean("alarm"));
+						tempJSONObj.put("alarm_time", res.getString("alarmTime"));
+						tempJSONObj.put("user", res.getInt("user"));
+						
+						// Add to array
+						appointments.add(tempJSONObj);
+					}
+					
+					// Add the array to the data
+					responseObj.put("data", appointments);
+					
+					sendMessage(responseObj.toJSONString());
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 }
