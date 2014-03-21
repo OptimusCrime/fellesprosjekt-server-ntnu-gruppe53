@@ -89,9 +89,6 @@ public class SocketServer extends Thread {
 				
 				// Check if the variable got actual content
 				if (msg.length() > 0) {
-					// DEBUG TODO
-					System.out.println("Got this: " + msg);
-					
 					// Decode the content (formatted as json)
 					decodeMessage(msg);
 				}
@@ -161,7 +158,7 @@ public class SocketServer extends Thread {
 				}
 			}
 			else if (action.equals("logout")) {
-				// TODO
+				this.userId = null;
 			}
 			else if (action.equals("appointments")) {
 				// Appoinement
@@ -193,7 +190,6 @@ public class SocketServer extends Thread {
 						ResultSet res = db.getAllAppointments(calendarIds);
 						
 						while (res.next()) {
-							System.out.println("Has next...");
 							JSONObject tempJSONObj = new JSONObject();
 							
 							// Add each field to the object
@@ -218,9 +214,7 @@ public class SocketServer extends Thread {
 						// Add the array to the data
 						responseObj.put("data", appointments);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 				}
 				else if (type.equals("post")) {
 					// Create new appointment, all hell is about to break loose
@@ -253,9 +247,7 @@ public class SocketServer extends Thread {
 						// Notify
 						this.server.notifyChange("appointments", "get", participantsArr);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 				}
  			}
 			else if (action.equals("employees")) {
@@ -286,9 +278,7 @@ public class SocketServer extends Thread {
 						// Add the array to the data
 						responseObj.put("data", employees);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 				}
 			}
 			else if (action.equals("room")) {
@@ -316,9 +306,7 @@ public class SocketServer extends Thread {
 						// Add the array to the data
 						responseObj.put("data", rooms);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 				}
 				else if (type.equals("gets")) {
 					// Loading the data dumped
@@ -344,14 +332,9 @@ public class SocketServer extends Thread {
 						// Add the array to the data
 						responseObj.put("data", tempJSONArr);
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
+					catch (Exception e) {}
 				}
 			}
-			
-			// Debug TODO
-			System.out.println("Sendt this: " + responseObj.toJSONString());
 			
 			// Send message
 			if (responseObj != null) {
@@ -361,9 +344,7 @@ public class SocketServer extends Thread {
 			// Close connection to database
 			db.closeConnection();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		catch (Exception e) {}
 	}
 	
 	/*
@@ -391,9 +372,10 @@ public class SocketServer extends Thread {
 	public void sendNotify(String t, String p) {
 		if (t.equals("appointments")) {
 			if (p.equals("get")) {
-				System.out.println("Came to send, ojfhdlkfjhsdklfjhdsf");
 				// Try to run the query
 				try {
+					db.reconnect();
+					
 					// Create response-object
 					JSONObject responseObj = new JSONObject();
 					responseObj.put("method", "response");
@@ -406,7 +388,6 @@ public class SocketServer extends Thread {
 					ResultSet res = db.getAllAppointments(this.calendarIds);
 					
 					while (res.next()) {
-						System.out.println("Has next...");
 						JSONObject tempJSONObj = new JSONObject();
 						
 						// Add each field to the object
@@ -432,10 +413,11 @@ public class SocketServer extends Thread {
 					responseObj.put("data", appointments);
 					
 					sendMessage(responseObj.toJSONString());
+					
+					// Close connection to database
+					db.closeConnection();
 				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
+				catch (Exception e) {}
 			}
 		}
 	}
