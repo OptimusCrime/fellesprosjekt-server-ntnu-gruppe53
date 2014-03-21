@@ -83,4 +83,23 @@ public class Server extends Thread {
 			t.start();
 		} catch(IOException e) {}
 	}
+	
+	/*
+	 * Notify
+	 */
+	
+	public void notifyChange(String t, String p, ArrayList<Integer> users) {
+		if (users.size() > 0) {
+			for (int i = 0; i < users.size(); i++) {
+				for (int j = 0; j < this.clients.size(); j++) {
+					System.out.println("User: " + this.clients.get(j).getUserId() + " -> " + users.get(i));
+					if (this.clients.get(j).getUserId() != null) {
+						if (this.clients.get(j).getUserId() == users.get(i)) {
+							this.clients.get(j).sendNotify(t, p);
+						}
+					}
+				}
+			}
+		}
+	}
 }
